@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         minesweeper solver
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  try to take over the world!
 // @author       helltractor
 // @match        https://minesweeper.online/*
@@ -11,17 +11,14 @@
 
 (function() {
     'use strict';
-    let intervalId = setInterval(convert, 1000);
+    setInterval(convert, 1000);
 })();
 
 function convert() {
-
     const face = document.getElementById('top_area_face');
     if (face && (face.classList.contains('hdd_top-area-face-lose') || face.classList.contains('hdd_top-area-face-win'))) {
         return; // Game over
     }
-
-    let div = document.getElementById('AreaBlock');
 
     // Calculate the number of mines
     let
@@ -66,7 +63,16 @@ function convert() {
         }
     }
 
-    createButton(result.join(''), columns, rows, mines);
+    const link = `https://mrgris.com/projects/minesweepr/demo/analyzer/?w=${columns}&h=${rows}&mines=${mines}&board=${result.join('')}`;
+    let button = document.getElementById('analyzeButton');
+
+    if (button) {
+        button.onclick = function() {
+            window.open(link, '_blank');
+        };
+    } else {
+        createButton(link);
+    }
 }
 
 function getNumberFromClassName(className) {
@@ -74,9 +80,9 @@ function getNumberFromClassName(className) {
     return match ? parseInt(match[1]) : 0;
 }
 
-function createButton(str, columns, rows, mines) {
-    const link = `https://mrgris.com/projects/minesweepr/demo/analyzer/?w=${columns}&h=${rows}&mines=${mines}&board=${str}`;
+function createButton(link) {
     let button = document.createElement('button');
+    button.id = 'analyzeButton';
     button.innerHTML = '分析当前局面';
     button.style.padding = '6px 12px';
     button.style.backgroundColor = '#f0f0f0';

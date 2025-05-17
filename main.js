@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         minesweeper solver
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  try to take over the world!
 // @author       helltractor
 // @match        https://minesweeper.online/*
@@ -22,56 +22,60 @@ function convert() {
     }
 
     let div = document.getElementById('AreaBlock');
-    let buttons = div.getElementsByTagName('button');
 
-    // Loop backwards through the list of buttons and remove each one
-    for (let i = buttons.length - 1; i >= 0; i--) {
-        buttons[i].parentNode.removeChild(buttons[i]);
+    // Calculate the number of mines
+    let
+        hundredsElement = document.getElementById('top_area_mines_100'),
+        tensElement = document.getElementById('top_area_mines_10'),
+        onesElement = document.getElementById('top_area_mines_1');
+
+    if (!hundredsElement || !tensElement || !onesElement) {
+        return; // Elements not found
     }
 
-    // Get the elements
-    let hundredsElement = document.getElementById('top_area_mines_100');
-    let tensElement = document.getElementById('top_area_mines_10');
-    let onesElement = document.getElementById('top_area_mines_1');
+    let 
+        hundreds = getNumberFromClassName(hundredsElement.className),
+        tens = getNumberFromClassName(tensElement.className),
+        ones = getNumberFromClassName(onesElement.className),
+        mines = hundreds * 100 + tens * 10 + ones;
 
-    if(hundredsElement == null || hundredsElement == undefined) {
-        return;
-    }
-    // Extract the numbers from the class names
-    let hundreds = getNumberFromClassName(hundredsElement.className);
-    let tens = getNumberFromClassName(tensElement.className);
-    let ones = getNumberFromClassName(onesElement.className);
-
-    // Calculate the total mines
-    let mines = hundreds * 100 + tens * 10 + ones;
-
-    let result = "";
-    let rows = document.getElementsByClassName("clear").length
-    var cells = document.getElementsByClassName("cell")
-    var columns = cells.length / rows
+    // Calculate the number of rows and columns
+    let result = [],
+        rows = document.getElementsByClassName("clear").length,
+        cells = document.getElementsByClassName("cell"),
+        columns = cells.length / rows;
 
     for (var i = 0; i < cells.length; i++) {
-        if(i % rows == 0 && i !== 0) {
-            result += ":";
+        if(i > 0 && i % rows == 0) {
+            result.push(',');
         }
         if (cells[i].classList.contains('hdd_flag')) {
             mines += 1;
-            result += '!';
+            result.push('!');
         } else if (cells[i].classList.contains('hdd_closed')) {
-            result += 'x';
+            result.push('x');
         }
         if (cells[i].classList.contains('hdd_type0')) {
-            result += '.';
+            result.push('.');
         }
         for (let n = 1; n <= 8; n++) {
             if (cells[i].classList.contains(`hdd_type${n}`)) {
-                result += String(n);
+                result.push(n);
                 break;
             }
         }
     }
-    var link = `https://mrgris.com/projects/minesweepr/demo/analyzer/?w=${columns}&h=${rows}&mines=${mines}&board=${result}`;
 
+    createButton(result.join(''), columns, rows, mines);
+}
+
+function getNumberFromClassName(className) {
+    let match = className.match(/hdd_top-area-num(\d)/);
+    return match ? parseInt(match[1]) : 0;
+}
+
+function createButton(str, columns, rows, mines) {
+    const link = `https://mrgris.com/projects/minesweepr/demo/analyzer/?w=${columns}&h=${rows}&mines=${mines}&board=${str}`;
     let button = document.createElement('button');
     button.innerHTML = '分析当前局面';
     button.style.padding = '6px 12px';
@@ -86,14 +90,8 @@ function convert() {
         window.open(link, '_blank');
     };
 
-    let div2 = document.getElementById('GameBottomPanelBlock');
-    if (div2.children.length === 4){
-        div2.appendChild(button);
+    let div = document.getElementById('GameBottomPanelBlock');
+    if (div.children.length === 4){
+        div.appendChild(button);
     }
-
-}
-
-function getNumberFromClassName(className) {
-    let match = className.match(/hdd_top-area-num(\d)/);
-    return match ? parseInt(match[1]) : 0;
 }

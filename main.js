@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         minesweeper solver
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
+// @version      1.0.3
 // @description  try to take over the world!
 // @author       helltractor
 // @match        https://minesweeper.online/*
@@ -35,7 +35,7 @@ function convert() {
         tens = getNumberFromClassName(tensElement.className),
         ones = getNumberFromClassName(onesElement.className),
         mines = hundreds * 100 + tens * 10 + ones;
-
+    
     // Calculate the number of rows and columns
     let result = [],
         rows = document.getElementsByClassName("clear").length,
@@ -64,15 +64,12 @@ function convert() {
     }
 
     const link = `https://mrgris.com/projects/minesweepr/demo/analyzer/?w=${columns}&h=${rows}&mines=${mines}&board=${result.join('')}`;
-    let button = document.getElementById('analyzeButton');
+    let button = document.getElementById('analyse_btn');
 
-    if (button) {
-        button.onclick = function() {
-            window.open(link, '_blank');
-        };
-    } else {
-        createButton(link);
+    if (!button) {
+        createButton();
     }
+    button.href = link;
 }
 
 function getNumberFromClassName(className) {
@@ -80,21 +77,18 @@ function getNumberFromClassName(className) {
     return match ? parseInt(match[1]) : 0;
 }
 
-function createButton(link) {
-    let button = document.createElement('button');
-    button.id = 'analyzeButton';
-    button.innerHTML = '分析当前局面';
-    button.style.padding = '6px 12px';
-    button.style.backgroundColor = '#f0f0f0';
-    button.style.color = '#333';
-    button.style.border = '1px solid #ccc';
-    button.style.borderRadius = '5px';
-    button.style.fontSize = '14px';
-    button.style.cursor = 'pointer';
-    button.style.marginLeft = '10px';
-    button.onclick = function() {
-        window.open(link, '_blank');
-    };
+function createButton() {
+    let button = document.createElement('a');
+    button.id = 'analyse_btn';
+    button.target = '_blank';
+    button.classList.add('btn', 'btn-sm', 'btn-default', 'btn-retro', 'btn-fixed', 'btn-retro-big');
+    button.title = '';
+    button.setAttribute('data-original-title', '分析');
+
+    let i = document.createElement('i');
+    // https://fontawesome.com/v4/cheatsheet/
+    i.className = 'fa fa-search';
+    button.appendChild(i);
 
     let div = document.getElementById('GameBottomPanelBlock');
     if (div.children.length === 4){
